@@ -43,12 +43,8 @@ import httplib
 import urlparse
 import datetime
 
-BASE_URL = "http://galeriadajoia.dyndns.org:7010"
+BASE_URL = "http://localhost:9090"
 """ The base url to be used in the construction of
-the access url for get and post """
-
-BASE_ADDRESS = "galeriadajoia.dyndns.org:7010"
-""" The base address to be used in the construction of
 the access url for get and post """
 
 REMOTE_SERVER = "www.google.com"
@@ -136,7 +132,13 @@ def disconnect(delay = 20.0):
     log("Disconnect", "response received with code '%s'" % response.status)
 
 def get_connection():
-    connection = httplib.HTTPConnection(BASE_ADDRESS)
+    # parses the current base url unpacking it into the host
+    # and part components to be used in the connection, then uses
+    # them to construct the new connection object
+    parse = urlparse.urlparse(BASE_URL)
+    host = parse.hostname
+    port = parse.port
+    connection = httplib.HTTPConnection(host, port = port)
     return connection
 
 def get_headers():
