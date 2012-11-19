@@ -67,6 +67,10 @@ TIMEOUT_TIME = 10.0
 """ The amount of seconds to wait before the connection
 is considered to be dead """
 
+DELAY_TIME = 20.0
+""" The amount of seconds to wait before executing an
+operation on the router (required to avoid problems) """
+
 COOKIE_DATA = "LOGINUNAME=%s&LOGINPASSWD=%s"
 """ The base data to be sent in the cookie message
 this should be the authentication value """
@@ -74,7 +78,6 @@ this should be the authentication value """
 COOKIE_MESSAGE = "POST /cgi-bin/login.cgi HTTP/1.1\r\n\
 Host: galeriadajoia.dyndns.org:7010\r\n\
 Content-Length: %d\r\n\
-Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\r\n\
 \r\n\
 %s"
 """ The cookie base post message to be used in
@@ -107,13 +110,13 @@ def ping():
         log("Ping", "failed to perform ping operation '%s'" % str(exception))
         return False
 
-def connect(delay = 20.0):
+def connect(delay = DELAY_TIME):
     while True:
         try: return connect_d(delay = delay)
         except: time.sleep(SLEEP_TIME)
 
-def connect_d(delay = 20.0):
-    log("Connect", "started the connection (%fs delay) ..." % delay)
+def connect_d(delay = DELAY_TIME):
+    log("Connect", "started the connection (%.1fs delay) ..." % delay)
 
     time.sleep(delay)
     connection = get_connection()
@@ -126,13 +129,13 @@ def connect_d(delay = 20.0):
     response = connection.getresponse()
     log("Connect", "response received with code '%s'" % response.status)
 
-def disconnect(delay = 20.0):
+def disconnect(delay = DELAY_TIME):
     while True:
         try: return disconnect_m(delay = delay)
         except: time.sleep(SLEEP_TIME)
 
-def disconnect_m(delay = 20.0):
-    log("Disconnect", "starts the connection (%fs delay) ..." % delay)
+def disconnect_m(delay = DELAY_TIME):
+    log("Disconnect", "starts the connection (%.1fs delay) ..." % delay)
 
     time.sleep(delay)
     connection = get_connection()
@@ -265,8 +268,9 @@ def run():
         # tries to ping the remote server to ensure
         # connection in case it fails reconnects the
         # connection again in the modem
-        result = ping()
-        if not result: connect()
+        #result = ping()
+        #if not result: connect()
+        connect()
 
         # sleeps for a while to avoid flooding of the
         # current connection
