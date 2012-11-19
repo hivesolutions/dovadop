@@ -41,6 +41,7 @@ import time
 import socket
 import httplib
 import urlparse
+import datetime
 
 BASE_URL = "http://galeriadajoia.dyndns.org:7010"
 """ The base url to be used in the construction of
@@ -93,21 +94,21 @@ def ping():
     the "outside" world.
     """
 
-    print "Ping :: running to remote server (%s) ..." % REMOTE_SERVER
+    log("Ping", "running to remote server (%s) ..." % REMOTE_SERVER)
 
     try:
         connection = httplib.HTTPConnection(REMOTE_SERVER)
         connection.request("GET", "/")
         response = connection.getresponse()
         if not response: return False
-        print "Ping :: response received with code '%s'" % response.status
+        log("Ping", "response received with code '%s'" % response.status)
         return True
     except BaseException, exception:
-        print "Ping :: failed to perform ping operation '%s'" % str(exception)
+        log("Ping", "failed to perform ping operation '%s'" % str(exception))
         return False
 
 def connect(delay = 20.0):
-    print "Connect :: started the connection (%fs delay) ..." % delay
+    log("Connect", "started the connection (%fs delay) ..." % delay)
 
     time.sleep(delay)
     connection = get_connection()
@@ -118,21 +119,21 @@ def connect(delay = 20.0):
         headers = headers
     )
     response = connection.getresponse()
-    print "Connect :: response received with code '%s'" % response.status
+    log("Connect", "response received with code '%s'" % response.status)
 
 def disconnect(delay = 20.0):
-    print "Disconnect :: starts the connection (%fs delay) ..." % delay
+    log("Disconnect", "starts the connection (%fs delay) ..." % delay)
 
     time.sleep(delay)
     connection = get_connection()
     headers = get_headers()
     connection.request(
         "GET",
-        "/cgi-bin/getcfg.cgi?wanstatus+/content/wan/wan.html+connect",
+        "/cgi-bin/getcfg.cgi?wanstatus+/content/wan/wan.html+disconnect",
         headers = headers
     )
     response = connection.getresponse()
-    print "Disconnect :: response received with code '%s'" % response.status
+    log("Disconnect", "response received with code '%s'" % response.status)
 
 def get_connection():
     connection = httplib.HTTPConnection(BASE_ADDRESS)
@@ -145,7 +146,7 @@ def get_headers():
     }
 
 def get_cookie():
-    print "Cookie :: new connection cookie value (authentication) ..."
+    log("Cookie", "new connection cookie value (authentication) ...")
 
     # sets the "initial" socket reference as invalid
     # this is considered the default behavior
@@ -226,12 +227,16 @@ def get_cookie():
         name, value = cenas
         if not name == "Set-Cookie": continue
         cookie = value.strip()
-        print "'%s'" % cookie
 
     # prints a message indicating the finding of the cookie value
     # and returns the string containing it
-    print "Cookie :: authentication cookie received '%s'" % cookie
+    log("Cookie", "authentication cookie received '%s'" % cookie)
     return cookie
+
+def log(name, message):
+    current = datetime.datetime.now()
+    current_string = current.strftime("%H:%M:%S")
+    print "[%s] %s - %s" % (name, current_string, message)
 
 def run():
     # iterates continuously pinging the remote web
