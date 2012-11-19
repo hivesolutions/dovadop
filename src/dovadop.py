@@ -55,10 +55,14 @@ REMOTE_SERVER = "www.google.com"
 access to the "outside" internet """
 
 USERNAME = "admin"
+""" The username value to be used in the authentication
+process for the router """
 
 PASSWORD = "admin"
+""" The password value to be used in the authentication
+process for the router """
 
-SLEEP_TIME = 30.0
+SLEEP_TIME = 10.0
 """ The amount of time to be used in between
 connection attempts """
 
@@ -75,17 +79,6 @@ Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3\r\n\
 """ The cookie base post message to be used in
 the communication with the server side """
 
-#http://192.168.2.1/cgi-bin/login.cgi POST
-#LOGINUNAME:admin
-#LOGINPASSWD:admin
-
-# utilizar http://docs.python.org/2/library/httplib.html
-# porque mantem os cookie e tudo o resto funcional
-
-#http://192.168.2.1/cgi-bin/getcfg.cgi?wanstatus+/content/wan/wan.html+connect
-#http://192.168.2.1/cgi-bin/getcfg.cgi?wanstatus+/content/wan/wan.html+disconnect
-# /cgi-bin/getcfg.cgi?wanstatus+/content/wan/wan.html")
-
 def ping():
     """
     "Ping" a remote web site to ensure that there's
@@ -100,21 +93,21 @@ def ping():
     the "outside" world.
     """
 
-    print "Pinging a remote server (%s) ..." % REMOTE_SERVER
+    print "Ping :: running to remote server (%s) ..." % REMOTE_SERVER
 
     try:
         connection = httplib.HTTPConnection(REMOTE_SERVER)
         connection.request("GET", "/")
         response = connection.getresponse()
         if not response: return False
-        print "Response received with code '%s'" % response.status
-
+        print "Ping :: response received with code '%s'" % response.status
         return True
-    except:
+    except BaseException, exception:
+        print "Ping :: failed to perform ping operation '%s'" % str(exception)
         return False
 
 def connect(delay = 20.0):
-    print "Initializing the current connection ..."
+    print "Connect :: started the connection (%fs delay) ..." % delay
 
     time.sleep(delay)
     connection = get_connection()
@@ -125,12 +118,21 @@ def connect(delay = 20.0):
         headers = headers
     )
     response = connection.getresponse()
-    print "Connect response received with code '%s'" % response.status
+    print "Connect :: response received with code '%s'" % response.status
 
 def disconnect(delay = 20.0):
-    print "Disconnecting the current connection ..."
+    print "Disconnect :: starts the connection (%fs delay) ..." % delay
 
     time.sleep(delay)
+    connection = get_connection()
+    headers = get_headers()
+    connection.request(
+        "GET",
+        "/cgi-bin/getcfg.cgi?wanstatus+/content/wan/wan.html+connect",
+        headers = headers
+    )
+    response = connection.getresponse()
+    print "Disconnect :: response received with code '%s'" % response.status
 
 def get_connection():
     connection = httplib.HTTPConnection(BASE_ADDRESS)
@@ -143,7 +145,7 @@ def get_headers():
     }
 
 def get_cookie():
-    print "Retrieving a new connection cookie value (authentication) ..."
+    print "Cookie :: new connection cookie value (authentication) ..."
 
     # sets the "initial" socket reference as invalid
     # this is considered the default behavior
@@ -212,7 +214,12 @@ def get_cookie():
     lines = response.split("\n")
     headers = lines[1:]
 
+    # starts the cookie value as unset, this is the default
+    # value to be used in case it's not found
     cookie = None
+
+    # iterates over the complete set of headers to try to find
+    # the set cookie header and retrieve its value
     for header in headers:
         cenas = header.strip().split(":", 1)
         if len(cenas) == 1: continue
@@ -221,7 +228,9 @@ def get_cookie():
         cookie = value.strip()
         print "'%s'" % cookie
 
-    print "Server authentication cookie received '%s'" % cookie
+    # prints a message indicating the finding of the cookie value
+    # and returns the string containing it
+    print "Cookie :: authentication cookie received '%s'" % cookie
     return cookie
 
 def run():
@@ -231,9 +240,8 @@ def run():
         # tries to ping the remote server to ensure
         # connection in case it fails reconnects the
         # connection again in the modem
-        #result = ping()
-        #if not result: connect()
-        connect()
+        result = ping()
+        if not result: connect()
 
         # sleeps for a while to avoid flooding of the
         # current connection
