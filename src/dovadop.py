@@ -1,23 +1,23 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Hive Cameria System
+# Hive Dovado Pinger
 # Copyright (C) 2008-2012 Hive Solutions Lda.
 #
-# This file is part of Hive Cameria System.
+# This file is part of Hive Dovado Pinger.
 #
-# Hive Cameria System is free software: you can redistribute it and/or modify
+# Hive Dovado Pinger is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Hive Cameria System is distributed in the hope that it will be useful,
+# Hive Dovado Pinger is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Hive Cameria System. If not, see <http://www.gnu.org/licenses/>.
+# along with Hive Dovado Pinger. If not, see <http://www.gnu.org/licenses/>.
 
 __author__ = "João Magalhães <joamag@hive.pt>"
 """ The author(s) of the module """
@@ -97,7 +97,7 @@ def ping():
     log("Ping", "running to remote server (%s) ..." % REMOTE_SERVER)
 
     try:
-        connection = httplib.HTTPConnection(REMOTE_SERVER)
+        connection = httplib.HTTPConnection(REMOTE_SERVER, timeout = TIMEOUT_TIME)
         connection.request("GET", "/")
         response = connection.getresponse()
         if not response: return False
@@ -108,6 +108,11 @@ def ping():
         return False
 
 def connect(delay = 20.0):
+    while True:
+        try: return connect_d(delay = delay)
+        except: time.sleep(SLEEP_TIME)
+
+def connect_d(delay = 20.0):
     log("Connect", "started the connection (%fs delay) ..." % delay)
 
     time.sleep(delay)
@@ -122,6 +127,11 @@ def connect(delay = 20.0):
     log("Connect", "response received with code '%s'" % response.status)
 
 def disconnect(delay = 20.0):
+    while True:
+        try: return disconnect_m(delay = delay)
+        except: time.sleep(SLEEP_TIME)
+
+def disconnect_m(delay = 20.0):
     log("Disconnect", "starts the connection (%fs delay) ..." % delay)
 
     time.sleep(delay)
@@ -215,6 +225,10 @@ def get_cookie():
     # more data to be transmitted)
     _socket.close()
 
+    # in case no data was received must return an invalid
+    # cookie value immediately
+    if not data: return None
+
     # joins the complete set of data for the response and
     # then splits the response into various lines
     response = "".join(data)
@@ -228,9 +242,9 @@ def get_cookie():
     # iterates over the complete set of headers to try to find
     # the set cookie header and retrieve its value
     for header in headers:
-        cenas = header.strip().split(":", 1)
-        if len(cenas) == 1: continue
-        name, value = cenas
+        header_s = header.strip().split(":", 1)
+        if len(header_s) == 1: continue
+        name, value = header_s
         if not name == "Set-Cookie": continue
         cookie = value.strip()
 
