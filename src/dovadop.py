@@ -49,7 +49,7 @@ the access url for get and post """
 
 REMOTE_SERVER = "www.google.com"
 """ The remote connection to be used to ensure
-access to the "outside" internet """
+access to the "outside" internet (ping server) """
 
 USERNAME = "admin"
 """ The username value to be used in the authentication
@@ -62,6 +62,10 @@ process for the router """
 SLEEP_TIME = 10.0
 """ The amount of time to be used in between
 connection attempts """
+
+TIMEOUT_TIME = 10.0
+""" The amount of seconds to wait before the connection
+is considered to be dead """
 
 COOKIE_DATA = "LOGINUNAME=%s&LOGINPASSWD=%s"
 """ The base data to be sent in the cookie message
@@ -138,7 +142,7 @@ def get_connection():
     parse = urlparse.urlparse(BASE_URL)
     host = parse.hostname
     port = parse.port
-    connection = httplib.HTTPConnection(host, port = port)
+    connection = httplib.HTTPConnection(host, port = port, timeout = TIMEOUT_TIME)
     return connection
 
 def get_headers():
